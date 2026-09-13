@@ -1,75 +1,158 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass[a4paper,14pt]{article}
+\usepackage[T2A]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{float}
 \usepackage{graphicx}
-\usepackage{listings}
 \usepackage{hyperref}
+\usepackage{listings}
 \usepackage{geometry}
-\geometry{top=2cm, bottom=2cm, left=3cm, right=1.5cm}
+\usepackage{fancyhdr}
+\usepackage{mathptmx}
 
-\title{Отчет по практической работе №1\\Дисциплина: GVS}
-\author{Студент}
-\date{\today}
+% СТУ 7.5-07-2021, п. 7.1.1-7.1.2: A4, Times New Roman 14, поля 30/20/10 мм.
+\geometry{a4paper, top=20mm, bottom=20mm, left=30mm, right=10mm}
+\setlength{\parindent}{12.5mm}
+\setlength{\parskip}{0pt}
+\linespread{1.0}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  columns=fullflexible,
+  frame=single,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  numberstyle=\tiny,
+  showstringspaces=false
+}
+
+\newcommand{\codefile}[2]{%
+  \subsection*{#1}%
+  \lstinputlisting[language=C++]{#2}%
+}
+
+\newcommand{\missingfigure}[1]{%
+  \begin{center}
+    \fbox{\parbox[c][45mm][c]{0.85\textwidth}{\centering
+      #1\\
+      График появится после запуска бенчмарка на CUDA-машине.}}
+  \end{center}
+}
 
 \begin{document}
-\maketitle
 
-\section{Цель работы}
-Освоить базовые навыки программирования CUDA: работу с одномерными сетками нитей и динамической памятью устройства. Изучить паттерн проектирования data + view.
+% Приложение М СТУ 7.5-07-2021: титульный лист отчёта о практической работе.
+\begin{titlepage}
+  \thispagestyle{empty}
+  \begin{center}
+    Министерство науки и высшего образования Российской Федерации\\
+    Федеральное государственное автономное образовательное учреждение\\
+    высшего образования\\
+    \textbf{«СИБИРСКИЙ ФЕДЕРАЛЬНЫЙ УНИВЕРСИТЕТ»}\\[12mm]
+    \rule{\textwidth}{0.4pt}\\[-2mm]
+    \textit{Институт: [указать полное наименование института]}\\
+    \rule{\textwidth}{0.4pt}\\[-2mm]
+    \textit{Кафедра: [указать полное наименование кафедры]}
 
-\section{Фрагменты исходного кода}
-\subsection{Data}
-\begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
-// core/include/Data.cuh
-template <typename AtomT>
-class Data { ... };
-\end{lstlisting}
+    \vfill
+    \textbf{ОТЧЕТ О ПРАКТИЧЕСКОЙ РАБОТЕ}
 
-\subsection{VectorView}
-\begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
-// core/include/VectorView.cuh
-template <typename AtomT>
-class VectorView { ... };
-\end{lstlisting}
+    \vspace{8mm}
+    \textbf{Тема: «Сложение векторов на CUDA с использованием паттерна Data + View»}
 
-\subsection{Vector}
-\begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
-// core/include/Vector.cuh
-template <typename AtomT>
-class Vector { ... };
-\end{lstlisting}
+    \vfill
+    \begin{flushright}
+      \begin{tabular}{p{55mm}p{55mm}}
+        Преподаватель & [инициалы, фамилия] \\
+        Студент & [номер группы, инициалы, фамилия]
+      \end{tabular}
+    \end{flushright}
 
-\subsection{kernel\_vecadd}
-\begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
-// core/include/kernel_vecadd.cuh
-template <typename AtomT>
-__global__ void kernel_vecadd(VectorView<AtomT> lhs, 
-                              VectorView<AtomT> rhs, 
-                              VectorView<AtomT> out) { ... }
-\end{lstlisting}
+    \vfill
+    Красноярск\\2026
+  \end{center}
+\end{titlepage}
 
-\section{Ссылка на репозиторий}
-\href{https://github.com/sigmachyo/GVS}{Репозиторий с полным кодом}
+\section*{ВВЕДЕНИЕ}
+Цель работы -- освоить базовые навыки программирования CUDA, включая работу с одномерными сетками нитей и динамической памятью устройства, а также изучить паттерн проектирования Data + View.
 
-\section{Результаты измерений}
-% Вставьте сюда сгенерированные графики:
-% \begin{figure}[h]
-% \centering
-% \includegraphics[width=0.8\textwidth]{real_complexity.png}
-% \caption{График реальной вычислительной сложности}
-% \end{figure}
+Для достижения цели необходимо разработать шаблонные классы \texttt{Data}, \texttt{VectorView} и \texttt{Vector}, реализовать CUDA-кернел сложения векторов, перегрузить оператор \texttt{operator+}, проверить результаты с помощью Google Test и Eigen, а также исследовать производительность с помощью Google Benchmark.
 
-% \begin{figure}[h]
-% \centering
-% \includegraphics[width=0.8\textwidth]{speedup.png}
-% \caption{График ускорения}
-% \end{figure}
+\section{Разработка программного решения}
+\subsection{Класс Data}
+Класс \texttt{Data} владеет массивом в глобальной памяти устройства. Выделение памяти выполняется в конструкторе, освобождение -- в деструкторе, что соответствует идиоме RAII. Класс поддерживает копирование, перемещение и обмен данными с хостом.
+\codefile{Data}{core/include/Data.cuh}
+
+\subsection{Класс VectorView}
+Класс \texttt{VectorView} хранит указатель на данные и их размер, не владея памятью. Объекты передаются в CUDA-кернел по значению. В тестах дополнительно проверяется свойство тривиальной копируемости.
+\codefile{VectorView}{core/include/VectorView.cuh}
+
+\subsection{Класс Vector}
+Класс \texttt{Vector} является фасадом: агрегирует \texttt{Data} через \texttt{std::shared\_ptr} и содержит собственное представление \texttt{VectorView}. Для исключения выделения памяти из измеряемой части бенчмарка предусмотрен метод заполнения заранее созданного результата.
+\codefile{Vector}{core/include/Vector.cuh}
+
+\subsection{CUDA-кернел сложения}
+Кернел принимает три объекта \texttt{VectorView} по значению. Каждый поток вычисляет индекс элемента и записывает сумму в выходной вектор.
+\codefile{kernel\_vecadd}{core/include/kernel_vecadd.cuh}
+
+\section{Тестирование корректности}
+Для проверки \texttt{operator+} используются размеры
+\[
+ n \in \{1,2,3,127,128,129,512,1024,1029\}.
+\]
+Эталонный результат вычисляется с помощью \texttt{Eigen::VectorXf}. Проверка включает обязательный вызов \texttt{isApprox} с точностью $10^{-6}$ и отдельную проверку максимальной абсолютной погрешности, не превышающей $10^{-6}$.
+
+\section{Экспериментальное исследование производительности}
+Бенчмарки выполняются для размеров
+\[
+ n \in \{8,8^2,8^3,8^4,8^5,8^6,8^7,8^8\}.
+\]
+Для CUDA используются события CUDA Events API. Память входных и выходного векторов выделяется и заполняется до начала измеряемого цикла, поэтому в результат попадает время вычисления сложения, а не время управления памятью.
+
+\subsection{График реальной вычислительной сложности}
+\IfFileExists{real_complexity.png}{%
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{real_complexity.png}
+    \caption{Реальная вычислительная сложность сложения векторов}
+  \end{figure}
+}{\missingfigure{Рисунок 1 -- Реальная вычислительная сложность}}
+
+\subsection{График ускорения}
+\IfFileExists{speedup.png}{%
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{speedup.png}
+    \caption{Ускорение CUDA относительно Eigen}
+  \end{figure}
+}{\missingfigure{Рисунок 2 -- Ускорение CUDA относительно Eigen}}
 
 \section{Интерпретация результатов}
-Теоретическая сложность сложения векторов линейна $O(N)$. 
-График реальной сложности подтверждает это: для CPU (Eigen) время растет пропорционально количеству элементов.
-Для GPU (CUDA) наблюдается накладной расход на запуск ядра при малых $N$, поэтому время почти константно. Однако при больших $N$ рост также становится линейным, но с меньшим коэффициентом пропорциональности.
-График ускорения показывает, что на малых $N$ CPU выигрывает из-за накладных расходов CUDA API. Начиная с некоторого размера, GPU начинает показывать значительное ускорение, выходящее на плато (ограничено пропускной способностью памяти).
+Теоретическая сложность по количеству элементов для сложения двух векторов равна $O(n)$, поскольку для каждого элемента выполняется одна операция сложения. Поэтому с увеличением $n$ время вычисления должно расти линейно.
+
+На малых размерах CUDA может уступать Eigen из-за постоянных накладных расходов запуска кернела и синхронизации. При увеличении размера вектора параллельная обработка GPU должна уменьшать время вычисления относительно реализации на CPU. Фактические значения ускорения зависят от модели GPU, версии CUDA, настроек компилятора и параметров системы, поэтому в отчёт должны включаться только результаты, полученные на конкретной CUDA-машине.
+
+\section*{ЗАКЛЮЧЕНИЕ}
+В работе разработана шаблонная реализация сложения векторов на CUDA с использованием паттерна Data + View. Класс \texttt{Data} управляет памятью устройства по RAII, \texttt{VectorView} предоставляет тривиально копируемое представление данных, а \texttt{Vector} объединяет эти компоненты и предоставляет перегруженный оператор сложения.
+
+Корректность решения проверяется сравнением с Eigen на заданных граничных размерах. Методика бенчмаркинга использует CUDA Events API и исключает выделение и освобождение памяти из измеряемого участка. Графики и окончательные численные выводы должны быть сформированы по фактическому файлу \texttt{benchmark\_results.json}.
+
+\section*{СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ}
+\begin{enumerate}
+  \item Стандарт университета. Система менеджмента качества. Общие требования к построению, изложению и оформлению документов учебной деятельности : СТУ 7.5--07--2021. -- Красноярск, 2021.
+  \item CUDA C++ Programming Guide [Электронный ресурс]. -- URL: \url{https://docs.nvidia.com/cuda/cuda-c-programming-guide/} (дата обращения: 13.09.2026).
+  \item Eigen documentation [Электронный ресурс]. -- URL: \url{https://eigen.tuxfamily.org/dox/} (дата обращения: 13.09.2026).
+  \item GoogleTest documentation [Электронный ресурс]. -- URL: \url{https://google.github.io/googletest/} (дата обращения: 13.09.2026).
+  \item Google Benchmark documentation [Электронный ресурс]. -- URL: \url{https://github.com/google/benchmark} (дата обращения: 13.09.2026).
+\end{enumerate}
 
 \end{document}
-
