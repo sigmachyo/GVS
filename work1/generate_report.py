@@ -1,9 +1,40 @@
+import json
 import math
+import sys
+from pathlib import Path
 
-N = [8, 64, 512, 4096, 32768, 262144, 2097152, 16777216]
-cpu_time = [0.001, 0.008, 0.06, 0.5, 4.0, 30.0, 250.0, 2000.0]
-gpu_time = [0.015, 0.015, 0.016, 0.018, 0.025, 0.08, 0.5, 3.5]
-speedup = [c / g for c, g in zip(cpu_time, gpu_time)]
+
+def time_in_milliseconds(benchmark):
+    unit = benchmark.get("time_unit", "ns")
+    value = benchmark["real_time"]
+    factors = {"ns": 1e-6, "us": 1e-3, "ms": 1.0, "s": 1e3}
+    return value * factors[unit]
+
+
+def load_measurements(path):
+    with open(path, "r", encoding="utf-8") as source:
+        benchmarks = json.load(source).get("benchmarks", [])
+
+    measurements = {"BM_EigenVectorAddition": {}, "BM_CUDAVectorAddition": {}}
+    for benchmark in benchmarks:
+        name = benchmark.get("name", "")
+        for benchmark_name in measurements:
+            if name.startswith(benchmark_name + "/"):
+                size = int(name.split("/")[1])
+                measurements[benchmark_name][size] = time_in_milliseconds(benchmark)
+
+    eigen = measurements["BM_EigenVectorAddition"]
+    cuda = measurements["BM_CUDAVectorAddition"]
+    sizes = sorted(set(eigen) & set(cuda))
+    if not sizes:
+        raise ValueError("No matching Eigen/CUDA measurements found")
+
+    return sizes, [eigen[size] for size in sizes], [cuda[size] for size in sizes]
+
+
+benchmark_path = sys.argv[1] if len(sys.argv) > 1 else "benchmark_results.json"
+N, cpu_time, gpu_time = load_measurements(benchmark_path)
+speedup = [cpu / gpu for cpu, gpu in zip(cpu_time, gpu_time)]
 
 def generate_svg(x_vals, y_lines, labels, title, ylabel, is_log_y=True):
     width, height = 800, 500
@@ -88,9 +119,7 @@ html = f"""<!DOCTYPE html>
 
     <h2>3. Интерпретация результатов</h2>
     <p>Теоретическая сложность сложения векторов линейна O(N).</p>
-    <p>График <strong>реальной сложности</strong> подтверждает это: для CPU (Eigen) время растет строго пропорционально количеству элементов.</p>
-    <p>Для GPU (CUDA) наблюдается накладной расход на запуск ядра и выделение ресурсов при малых N, поэтому время почти константно (около 0.015 мс). Однако при больших N (от 2^15) рост также становится линейным, но с гораздо меньшим коэффициентом пропорциональности, чем на CPU.</p>
-    <p>График <strong>ускорения</strong> показывает, что на малых N CPU быстрее из-за накладных расходов CUDA API (speedup < 1). Начиная с размера ~1000 элементов, GPU начинает показывать значительное ускорение, которое выходит на плато около ~500-600x (ограничивается пропускной способностью памяти видеокарты).</p>
+    <p>Графики построены по фактическим результатам Google Benchmark из файла <code>{benchmark_path}</code>. Для сложения векторов ожидается линейная асимптотика O(N), а различия на малых размерах объясняются постоянными накладными расходами запуска CUDA-ядра.</p>
 
     <h2>4. Фрагменты исходного кода</h2>
     <h3>Data.cuh (фрагмент)</h3>
@@ -146,7 +175,8 @@ __global__ void kernel_vecadd(VectorView&lt;AtomT&gt; lhs, VectorView&lt;AtomT&g
 </html>
 """
 
-with open("work1/Report.html", "w") as f:
+output_path = Path(__file__).with_name("Report.html")
+with output_path.open("w", encoding="utf-8") as f:
     f.write(html)
-print("Report.html generated!")
+print(f"{output_path} generated!")
 

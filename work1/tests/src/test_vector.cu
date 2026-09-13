@@ -3,6 +3,9 @@
 #include "Vector.cuh"
 #include <vector>
 #include <random>
+#include <type_traits>
+
+static_assert(std::is_trivially_copyable_v<VectorView<float>>);
 
 class VectorAddTest : public ::testing::TestWithParam<std::size_t> {};
 
@@ -44,17 +47,9 @@ TEST_P(VectorAddTest, Addition) {
     // Compare with Eigen
     Eigen::Map<Eigen::VectorXf> custom_eigen_result(host_result.data(), n);
     
-    // Check using isApprox with precision 10^-6
-    // Since isApprox checks relative error by default with some precision, we can just use it or implement absolute error check manually.
-    // The requirement says "с абсолютной точностью 10^-6".
-    // Eigen::VectorXf::isApprox uses a relative precision. But we can check absolute error explicitly or use isApprox.
-    // Actually, `isApprox` signature is `isApprox(other, prec)`. The default is a relative tolerance.
-    // To check absolute error: (eigen_result - custom_eigen_result).cwiseAbs().maxCoeff() < 1e-6,
-    // OR eigen_result.isApprox(custom_eigen_result, 1e-6) where if values are close to 0 it checks absolute but typically it's relative.
-    // The instruction specifically says "применять метод Eigen::VectorXf::isApprox с абсолютной точностью 10^-6".
-    // So we will just call eigen_result.isApprox(custom_eigen_result, 1e-6f) and assert it is true.
-    // Wait, isApprox for absolute is not really absolute precision. But if we just follow the text:
+    // isApprox is required by the assignment; the second check enforces absolute error.
     EXPECT_TRUE(eigen_result.isApprox(custom_eigen_result, 1e-6f));
+    EXPECT_LE((eigen_result - custom_eigen_result).cwiseAbs().maxCoeff(), 1e-6f);
 }
 
 INSTANTIATE_TEST_SUITE_P(

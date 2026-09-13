@@ -39,6 +39,8 @@ public:
     const VectorView<AtomT>& view() const {
         return view_;
     }
+
+    void add_from(const Vector& lhs, const Vector& rhs);
 };
 
 // operator+ declaration
@@ -50,18 +52,16 @@ Vector<AtomT> operator+(const Vector<AtomT>& lhs, const Vector<AtomT>& rhs);
 #include <stdexcept>
 
 template <typename AtomT>
-Vector<AtomT> operator+(const Vector<AtomT>& lhs, const Vector<AtomT>& rhs) {
-    if (lhs.size() != rhs.size()) {
+void Vector<AtomT>::add_from(const Vector& lhs, const Vector& rhs) {
+    if (lhs.size() != rhs.size() || size() != lhs.size()) {
         throw std::invalid_argument("Vectors must have the same size");
     }
-
-    Vector<AtomT> result(lhs.size());
 
     int blockSize = 256;
     int numBlocks = (lhs.size() + blockSize - 1) / blockSize;
 
     if (lhs.size() > 0) {
-        kernel_vecadd<<<numBlocks, blockSize>>>(lhs.view(), rhs.view(), result.view());
+        kernel_vecadd<<<numBlocks, blockSize>>>(lhs.view(), rhs.view(), view_);
         cudaError_t err = cudaGetLastError();
         if (err != cudaSuccess) {
             throw std::runtime_error(cudaGetErrorString(err));
@@ -71,6 +71,12 @@ Vector<AtomT> operator+(const Vector<AtomT>& lhs, const Vector<AtomT>& rhs) {
             throw std::runtime_error(cudaGetErrorString(err));
         }
     }
+}
+
+template <typename AtomT>
+Vector<AtomT> operator+(const Vector<AtomT>& lhs, const Vector<AtomT>& rhs) {
+    Vector<AtomT> result(lhs.size());
+    result.add_from(lhs, rhs);
 
     return result;
 }

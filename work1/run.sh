@@ -13,6 +13,7 @@ echo "=== Запуск бенчмарков ==="
 
 echo "=== Построение графиков (нужен python, pandas, plotly) ==="
 python3 scripts/plot.py benchmark_results.json
+python3 generate_report.py benchmark_results.json
 
 echo "=== Готово! Теперь вы можете скомпилировать report.tex ==="
 

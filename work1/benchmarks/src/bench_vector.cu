@@ -47,6 +47,7 @@ static void BM_CUDAVectorAddition(benchmark::State& state) {
 
     Vector<float> cuda_rhs(n);
     cuda_rhs.data().copy_from_host(host_rhs.data());
+    Vector<float> cuda_result(n);
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -55,7 +56,7 @@ static void BM_CUDAVectorAddition(benchmark::State& state) {
     for (auto _ : state) {
         cudaEventRecord(start);
         
-        Vector<float> cuda_result = cuda_lhs + cuda_rhs;
+        cuda_result.add_from(cuda_lhs, cuda_rhs);
         
         cudaEventRecord(stop);
         cudaEventSynchronize(stop);
@@ -65,7 +66,6 @@ static void BM_CUDAVectorAddition(benchmark::State& state) {
         
         state.SetIterationTime(milliseconds / 1000.0);
         
-        // cuda_result will be destroyed here, freeing memory
     }
 
     cudaEventDestroy(start);
