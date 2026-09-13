@@ -17,8 +17,9 @@ CMD ["/bin/bash", "-c", "\
     cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && \
     cmake --build build && \
     ./build/tests/test_vector && \
-    ./build/benchmarks/bench_vector --benchmark_out=benchmark_results.json --benchmark_out_format=json && \
-    python3 scripts/plot.py benchmark_results.json && \
-    python3 generate_report.py benchmark_results.json \
+    ./build/benchmarks/bench_vector --benchmark_out=reports/benchmark_results.json --benchmark_out_format=json && \
+    python3 reports/scripts/plot.py reports/benchmark_results.json && \
+    python3 reports/generate_report.py reports/benchmark_results.json && \
+    python3 reports/create_report_docx.py \
 "]
 

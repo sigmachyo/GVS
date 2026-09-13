@@ -90,19 +90,19 @@
 \section{Разработка программного решения}
 \subsection{Класс Data}
 Класс \texttt{Data} владеет массивом в глобальной памяти устройства. Выделение памяти выполняется в конструкторе, освобождение -- в деструкторе, что соответствует идиоме RAII. Класс поддерживает копирование, перемещение и обмен данными с хостом.
-\codefile{Data}{core/include/Data.cuh}
+\codefile{Data}{../core/include/Data.cuh}
 
 \subsection{Класс VectorView}
 Класс \texttt{VectorView} хранит указатель на данные и их размер, не владея памятью. Объекты передаются в CUDA-кернел по значению. В тестах дополнительно проверяется свойство тривиальной копируемости.
-\codefile{VectorView}{core/include/VectorView.cuh}
+\codefile{VectorView}{../core/include/VectorView.cuh}
 
 \subsection{Класс Vector}
 Класс \texttt{Vector} является фасадом: агрегирует \texttt{Data} через \texttt{std::shared\_ptr} и содержит собственное представление \texttt{VectorView}. Для исключения выделения памяти из измеряемой части бенчмарка предусмотрен метод заполнения заранее созданного результата.
-\codefile{Vector}{core/include/Vector.cuh}
+\codefile{Vector}{../core/include/Vector.cuh}
 
 \subsection{CUDA-кернел сложения}
 Кернел принимает три объекта \texttt{VectorView} по значению. Каждый поток вычисляет индекс элемента и записывает сумму в выходной вектор.
-\codefile{kernel\_vecadd}{core/include/kernel_vecadd.cuh}
+\codefile{kernel\_vecadd}{../core/include/kernel_vecadd.cuh}
 
 \section{Тестирование корректности}
 Для проверки \texttt{operator+} используются размеры

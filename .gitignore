@@ -24,6 +24,11 @@ Makefile
 
 # Benchmark and generated analysis data
 benchmark_results.json
+work1/reports/benchmark_results.json
+work1/reports/real_complexity.html
+work1/reports/real_complexity.png
+work1/reports/speedup.html
+work1/reports/speedup.png
 *.csv
 *.log
 

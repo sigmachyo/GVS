@@ -9,6 +9,7 @@ from docx.shared import Mm, Pt
 
 
 ROOT = Path(__file__).parent
+PROJECT_ROOT = ROOT.parent
 OUTPUT = ROOT / "report.docx"
 
 
@@ -58,7 +59,7 @@ def add_body(document, text):
 
 def add_code(document, title, path):
     add_heading(document, title, level=2)
-    source = (ROOT / path).read_text(encoding="utf-8")
+    source = (PROJECT_ROOT / path).read_text(encoding="utf-8")
     paragraph = document.add_paragraph()
     paragraph.paragraph_format.left_indent = Mm(5)
     paragraph.paragraph_format.right_indent = Mm(5)

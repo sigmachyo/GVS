@@ -3,6 +3,9 @@ import plotly.graph_objects as go
 import pandas as pd
 import sys
 import argparse
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).resolve().parent.parent
 
 def main():
     parser = argparse.ArgumentParser(description="Plot benchmark results")
@@ -75,8 +78,8 @@ def main():
         yaxis_type="log",
         template="plotly_white"
     )
-    fig_complexity.write_html("real_complexity.html")
-    fig_complexity.write_image("real_complexity.png")
+    fig_complexity.write_html(OUTPUT_DIR / "real_complexity.html")
+    fig_complexity.write_image(OUTPUT_DIR / "real_complexity.png")
 
     # Plot Speedup
     if not df_eigen.empty and not df_cuda.empty:
@@ -94,8 +97,8 @@ def main():
             yaxis_type="log",
             template="plotly_white"
         )
-        fig_speedup.write_html("speedup.html")
-        fig_speedup.write_image("speedup.png")
+        fig_speedup.write_html(OUTPUT_DIR / "speedup.html")
+        fig_speedup.write_image(OUTPUT_DIR / "speedup.png")
 
 if __name__ == "__main__":
     main()
