@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install pandas plotly kaleido
+COPY reports/requirements.txt /tmp/report-requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/report-requirements.txt
 
 WORKDIR /app
 COPY . /app

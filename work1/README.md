@@ -32,7 +32,7 @@
 2. **CMake** (версия 3.20+)
 3. **Ninja** (опционально, но рекомендуется для быстрой сборки)
 4. Библиотеки **Eigen3**, **GoogleTest** и **Google Benchmark** (настроены на автоматическое скачивание через `FetchContent` внутри CMake, устанавливать их вручную в систему не нужно!).
-5. **Python 3** с библиотеками `pandas` и `plotly` (только если вы хотите сгенерировать отчётные графики).
+5. **Python 3** с зависимостями из `reports/requirements.txt` (только для генерации отчётных материалов).
 
 ---
 
@@ -62,7 +62,7 @@ cmake --build build
 ./build/benchmarks/bench_vector --benchmark_out=reports/benchmark_results.json --benchmark_out_format=json
 
 # 5. Генерируем графики (требуется python, pandas, plotly, kaleido)
-pip install pandas plotly kaleido
+pip install -r reports/requirements.txt
 python reports/scripts/plot.py reports/benchmark_results.json
 python reports/generate_report.py reports/benchmark_results.json
 python reports/create_report_docx.py
@@ -77,4 +77,4 @@ python reports/create_report_docx.py
 Я подготовил 2 варианта отчета:
 1. **Word-отчет (`reports/report.docx`)**: создается скриптом `reports/create_report_docx.py` с оформлением по СТУ 7.5–07–2021. После запуска бенчмарков он включает фактические графики производительности.
 2. **HTML-отчет (`reports/Report.html`)**: после запуска бенчмарков он пересоздается с фактическими графиками производительности и фрагментами кода. Его можно открыть в браузере и сохранить как PDF.
-2. **LaTeX-отчет (`report.tex`)**: Классический шаблон, который вы можете загрузить на Overleaf. Чтобы вставить в него ваши собственные реальные графики, раскомментируйте блоки `\includegraphics` после запуска `plot.py`.
+3. **LaTeX-отчет (`reports/report.tex`)**: шаблон, который можно загрузить в Overleaf; графики подключаются после запуска бенчмарка.
