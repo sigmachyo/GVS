@@ -1,0 +1,75 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{top=2cm, bottom=2cm, left=3cm, right=1.5cm}
+
+\title{Отчет по практической работе №1\\Дисциплина: GVS}
+\author{Студент}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Цель работы}
+Освоить базовые навыки программирования CUDA: работу с одномерными сетками нитей и динамической памятью устройства. Изучить паттерн проектирования data + view.
+
+\section{Фрагменты исходного кода}
+\subsection{Data}
+\begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+// core/include/Data.cuh
+template <typename AtomT>
+class Data { ... };
+\end{lstlisting}
+
+\subsection{VectorView}
+\begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+// core/include/VectorView.cuh
+template <typename AtomT>
+class VectorView { ... };
+\end{lstlisting}
+
+\subsection{Vector}
+\begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+// core/include/Vector.cuh
+template <typename AtomT>
+class Vector { ... };
+\end{lstlisting}
+
+\subsection{kernel\_vecadd}
+\begin{lstlisting}[language=C++, basicstyle=\ttfamily\scriptsize]
+// core/include/kernel_vecadd.cuh
+template <typename AtomT>
+__global__ void kernel_vecadd(VectorView<AtomT> lhs, 
+                              VectorView<AtomT> rhs, 
+                              VectorView<AtomT> out) { ... }
+\end{lstlisting}
+
+\section{Ссылка на репозиторий}
+\href{https://github.com/your-username/gvs}{Репозиторий с полным кодом}
+
+\section{Результаты измерений}
+% Вставьте сюда сгенерированные графики:
+% \begin{figure}[h]
+% \centering
+% \includegraphics[width=0.8\textwidth]{real_complexity.png}
+% \caption{График реальной вычислительной сложности}
+% \end{figure}
+
+% \begin{figure}[h]
+% \centering
+% \includegraphics[width=0.8\textwidth]{speedup.png}
+% \caption{График ускорения}
+% \end{figure}
+
+\section{Интерпретация результатов}
+Теоретическая сложность сложения векторов линейна $O(N)$. 
+График реальной сложности подтверждает это: для CPU (Eigen) время растет пропорционально количеству элементов.
+Для GPU (CUDA) наблюдается накладной расход на запуск ядра при малых $N$, поэтому время почти константно. Однако при больших $N$ рост также становится линейным, но с меньшим коэффициентом пропорциональности.
+График ускорения показывает, что на малых $N$ CPU выигрывает из-за накладных расходов CUDA API. Начиная с некоторого размера, GPU начинает показывать значительное ускорение, выходящее на плато (ограничено пропускной способностью памяти).
+
+\end{document}
+
