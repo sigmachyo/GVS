@@ -1,19 +1,23 @@
+#include <cstddef>
+#include <vector>
+#include <random>
+#include <cuda_runtime.h>
 #include <benchmark/benchmark.h>
 #include <Eigen/Dense>
 #include "Vector.cuh"
-#include <vector>
-#include <random>
+
+using namespace std;
 
 static void BM_EigenVectorAddition(benchmark::State& state) {
-    std::size_t n = state.range(0);
-    std::vector<float> host_lhs(n);
-    std::vector<float> host_rhs(n);
+    size_t n = state.range(0);
+    vector<float> host_lhs(n);
+    vector<float> host_rhs(n);
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_real_distribution<float> dis(0.0f, 1.0f);
 
-    for (std::size_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         host_lhs[i] = dis(gen);
         host_rhs[i] = dis(gen);
     }
@@ -29,15 +33,15 @@ static void BM_EigenVectorAddition(benchmark::State& state) {
 }
 
 static void BM_CUDAVectorAddition(benchmark::State& state) {
-    std::size_t n = state.range(0);
-    std::vector<float> host_lhs(n);
-    std::vector<float> host_rhs(n);
+    size_t n = state.range(0);
+    vector<float> host_lhs(n);
+    vector<float> host_rhs(n);
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_real_distribution<float> dis(0.0f, 1.0f);
 
-    for (std::size_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         host_lhs[i] = dis(gen);
         host_rhs[i] = dis(gen);
     }
@@ -72,7 +76,6 @@ static void BM_CUDAVectorAddition(benchmark::State& state) {
     cudaEventDestroy(stop);
 }
 
-// 8, 8^2, 8^3, 8^4, 8^5, 8^6, 8^7, 8^8
 BENCHMARK(BM_EigenVectorAddition)
     ->RangeMultiplier(8)
     ->Range(8, 16777216);

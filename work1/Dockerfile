@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY reports/requirements.txt /tmp/report-requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/report-requirements.txt
+RUN pip3 install --no-cache-dir --upgrade cmake && \
+    pip3 install --no-cache-dir -r /tmp/report-requirements.txt
 
 WORKDIR /app
 COPY . /app

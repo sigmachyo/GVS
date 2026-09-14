@@ -29,7 +29,6 @@ def main():
             try:
                 n = int(name.split("/")[1])
                 time_ms = b["real_time"] if b.get("time_unit") == "ms" else b["real_time"] / 1e6
-                # google benchmark time is usually in ns or ms. Let's assume it's in the time_unit field.
                 unit = b.get("time_unit", "ns")
                 if unit == "ns":
                     time_ms = b["real_time"] / 1e6
@@ -65,7 +64,6 @@ def main():
     df_eigen = pd.DataFrame(eigen_data).sort_values("N")
     df_cuda = pd.DataFrame(cuda_data).sort_values("N")
 
-    # Plot Real Complexity
     fig_complexity = go.Figure()
     fig_complexity.add_trace(go.Scatter(x=df_eigen["N"], y=df_eigen["Time"], mode='lines+markers', name='Eigen Vector Addition (CPU)'))
     fig_complexity.add_trace(go.Scatter(x=df_cuda["N"], y=df_cuda["Time"], mode='lines+markers', name='CUDA Vector Addition (GPU)'))
@@ -79,9 +77,11 @@ def main():
         template="plotly_white"
     )
     fig_complexity.write_html(OUTPUT_DIR / "real_complexity.html")
-    fig_complexity.write_image(OUTPUT_DIR / "real_complexity.png")
+    try:
+        fig_complexity.write_image(OUTPUT_DIR / "real_complexity.png")
+    except Exception as e:
+        print(f"Warning: could not export PNG image: {e}")
 
-    # Plot Speedup
     if not df_eigen.empty and not df_cuda.empty:
         merged = pd.merge(df_eigen, df_cuda, on="N", suffixes=('_eigen', '_cuda'))
         merged["Speedup"] = merged["Time_eigen"] / merged["Time_cuda"]
@@ -98,7 +98,10 @@ def main():
             template="plotly_white"
         )
         fig_speedup.write_html(OUTPUT_DIR / "speedup.html")
-        fig_speedup.write_image(OUTPUT_DIR / "speedup.png")
+        try:
+            fig_speedup.write_image(OUTPUT_DIR / "speedup.png")
+        except Exception as e:
+            print(f"Warning: could not export PNG image: {e}")
 
 if __name__ == "__main__":
     main()

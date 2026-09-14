@@ -64,7 +64,6 @@ def generate_svg(x_vals, y_lines, labels, title, ylabel, is_log_y=True):
     svg += f'<text x="25" y="{height/2}" text-anchor="middle" font-size="14" transform="rotate(-90 25 {height/2})">{ylabel}</text>\n'
     svg += f'<text x="{width/2}" y="{height - 15}" text-anchor="middle" font-size="14">N (log10)</text>\n'
 
-    # Draw grid and axes
     svg += f'<line x1="{pad_left}" y1="{height-pad_bottom}" x2="{width-pad_right}" y2="{height-pad_bottom}" stroke="#333" stroke-width="2"/>\n'
     svg += f'<line x1="{pad_left}" y1="{pad_top}" x2="{pad_left}" y2="{height-pad_bottom}" stroke="#333" stroke-width="2"/>\n'
     
@@ -79,7 +78,6 @@ def generate_svg(x_vals, y_lines, labels, title, ylabel, is_log_y=True):
         
         svg += f'<polyline points="{" ".join(pts)}" fill="none" stroke="{colors[i]}" stroke-width="2"/>\n'
         
-        # Legend
         leg_y = pad_top + i * 20
         svg += f'<line x1="{pad_left + 20}" y1="{leg_y}" x2="{pad_left + 40}" y2="{leg_y}" stroke="{colors[i]}" stroke-width="2"/>\n'
         svg += f'<text x="{pad_left + 45}" y="{leg_y + 4}" font-size="12">{labels[i]}</text>\n'
@@ -134,7 +132,7 @@ private:
 public:
     explicit Data(std::size_t size) : size_(size), data_(nullptr) {{ allocate(size_); }}
     ~Data() {{ if (data_) cudaFree(data_); }}
-    // ... move, copy, RAII ...
+    // реализация перемещения, копирования (RAII)
 }};</code></pre>
 
     <h3>VectorView.cuh</h3>
