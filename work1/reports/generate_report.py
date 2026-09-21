@@ -124,15 +124,14 @@ html = f"""<!DOCTYPE html>
 <pre><code>template &lt;typename AtomT&gt;
 class Data {{
 private:
-    std::size_t size_;
+    int size_;
     AtomT* data_;
-    void allocate(std::size_t size) {{
-        if (size > 0) cudaMalloc(&amp;data_, size * sizeof(AtomT));
-    }}
 public:
-    explicit Data(std::size_t size) : size_(size), data_(nullptr) {{ allocate(size_); }}
+    explicit Data(int size) : size_(size), data_(nullptr) {{
+        if (size_ > 0) cudaMalloc(&amp;data_, size_ * sizeof(AtomT));
+    }}
     ~Data() {{ if (data_) cudaFree(data_); }}
-    // реализация перемещения, копирования (RAII)
+    // конструкторы копирования, перемещения, операторы = (Rule of Five)
 }};</code></pre>
 
     <h3>VectorView.cuh</h3>
@@ -140,23 +139,23 @@ public:
 class VectorView {{
 private:
     AtomT* data_;
-    std::size_t size_;
+    int size_;
 public:
-    __host__ __device__ VectorView(AtomT* data, std::size_t size) : data_(data), size_(size) {{}}
-    __host__ __device__ std::size_t size() const {{ return size_; }}
-    __host__ __device__ AtomT&amp; operator[](std::size_t n) {{ return data_[n]; }}
+    __host__ __device__ VectorView(AtomT* data, int size) : data_(data), size_(size) {{}}
+    __host__ __device__ int size() const {{ return size_; }}
+    __host__ __device__ AtomT&amp; operator[](int n) {{ return data_[n]; }}
 }};</code></pre>
 
     <h3>Vector.cuh</h3>
 <pre><code>template &lt;typename AtomT&gt;
 class Vector {{
 private:
-    std::shared_ptr&lt;Data&lt;AtomT&gt;&gt; data_;
+    shared_ptr&lt;Data&lt;AtomT&gt;&gt; data_;
     VectorView&lt;AtomT&gt; view_;
 public:
-    explicit Vector(std::size_t size) 
-        : data_(std::make_shared&lt;Data&lt;AtomT&gt;&gt;(size)),
-          view_(data_->data(), size) {{}}
+    explicit Vector(int size) 
+        : data_(make_shared&lt;Data&lt;AtomT&gt;&gt;(size)),
+          view_(data_-&gt;data(), size) {{}}
     // ...
 }};
 </code></pre>

@@ -1,4 +1,3 @@
-#include <cstddef>
 #include <vector>
 #include <random>
 #include <cuda_runtime.h>
@@ -8,8 +7,10 @@
 
 using namespace std;
 
+// Бенчмарк сложения на CPU (Eigen)
 static void BM_EigenVectorAddition(benchmark::State& state) {
-    size_t n = state.range(0);
+    int n = state.range(0);
+
     vector<float> host_lhs(n);
     vector<float> host_rhs(n);
 
@@ -17,7 +18,7 @@ static void BM_EigenVectorAddition(benchmark::State& state) {
     mt19937 gen(rd());
     uniform_real_distribution<float> dis(0.0f, 1.0f);
 
-    for (size_t i = 0; i < n; ++i) {
+    for (int i = 0; i < n; ++i) {
         host_lhs[i] = dis(gen);
         host_rhs[i] = dis(gen);
     }
@@ -32,8 +33,10 @@ static void BM_EigenVectorAddition(benchmark::State& state) {
     }
 }
 
+// Бенчмарк сложения на GPU (CUDA) с использованием CUDA Events для замера времени
 static void BM_CUDAVectorAddition(benchmark::State& state) {
-    size_t n = state.range(0);
+    int n = state.range(0);
+
     vector<float> host_lhs(n);
     vector<float> host_rhs(n);
 
@@ -41,11 +44,12 @@ static void BM_CUDAVectorAddition(benchmark::State& state) {
     mt19937 gen(rd());
     uniform_real_distribution<float> dis(0.0f, 1.0f);
 
-    for (size_t i = 0; i < n; ++i) {
+    for (int i = 0; i < n; ++i) {
         host_lhs[i] = dis(gen);
         host_rhs[i] = dis(gen);
     }
 
+    // Выделяем память и копируем данные до замеров
     Vector<float> cuda_lhs(n);
     cuda_lhs.data().copy_from_host(host_lhs.data());
 
@@ -59,23 +63,20 @@ static void BM_CUDAVectorAddition(benchmark::State& state) {
 
     for (auto _ : state) {
         cudaEventRecord(start);
-        
         cuda_result.add_from(cuda_lhs, cuda_rhs);
-        
         cudaEventRecord(stop);
         cudaEventSynchronize(stop);
-        
+
         float milliseconds = 0;
         cudaEventElapsedTime(&milliseconds, start, stop);
-        
         state.SetIterationTime(milliseconds / 1000.0);
-        
     }
 
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 }
 
+// Размеры: 8^1, 8^2, ..., 8^8
 BENCHMARK(BM_EigenVectorAddition)
     ->RangeMultiplier(8)
     ->Range(8, 16777216);
@@ -84,4 +85,3 @@ BENCHMARK(BM_CUDAVectorAddition)
     ->RangeMultiplier(8)
     ->Range(8, 16777216)
     ->UseManualTime();
-
