@@ -41,10 +41,40 @@
 
 ### Способ 1: Использование Docker (Рекомендуемый)
 
-Если у вас есть доступ к серверу с поддержкой NVIDIA Container Toolkit, вы можете собрать всё в изоляции:
+Если вы работаете на Windows и у вас установлен Docker с поддержкой NVIDIA (WSL2), вы можете использовать контейнер как полноценную среду разработки с полным контролем над сборкой.
+
+**1. Сборка базового образа (выполняется один раз):**
 ```bash
 docker build -t gvs_work1 .
-docker run --gpus all gvs_work1
+```
+
+**2. Запуск интерактивного терминала (Development Loop):**
+Откройте терминал в папке `work1` и запустите контейнер с монтированием текущей папки:
+```bash
+docker run --gpus all -it --name gvs_dev_env --entrypoint bash -v "${PWD}:/app" gvs_work1
+```
+*Без флага `--rm` контейнер не удалится при выходе (`exit`). В будущем вы сможете вернуться к скомпилированному проекту командой `docker start -ai gvs_dev_env`.*
+
+**3. Пошаговая сборка и запуск (внутри Docker-контейнера):**
+Находясь внутри контейнера, мы используем папку `/tmp/build` для сборки, чтобы избежать конфликтов и блокировок файловой системы Windows.
+```bash
+# Переходим в папку проекта (внутри контейнера)
+cd work1
+
+# А) Настройка CMake (выполняется один раз)
+cmake -B /tmp/build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+# Б) Компиляция (выполняется после каждого изменения кода)
+cmake --build /tmp/build
+
+# В) Запуск тестов
+/tmp/build/tests/test_vector
+
+# Г) Запуск бенчмарков (с сохранением результатов на хост-систему)
+/tmp/build/benchmarks/bench_vector --benchmark_out=reports/benchmark_results.json --benchmark_out_format=json
+
+# Д) Построение только графиков
+python3 reports/scripts/plot.py reports/benchmark_results.json
 ```
 
 ### Способ 2: Локальная сборка (На Linux / Windows)

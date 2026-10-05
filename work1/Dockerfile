@@ -16,12 +16,11 @@ WORKDIR /app
 COPY . /app
 
 CMD ["/bin/bash", "-c", "\
-    cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && \
+    cmake -B build -G Ninja -DCMAKE_BUEILD_TYP=Release && \
     cmake --build build && \
     ./build/tests/test_vector && \
     ./build/benchmarks/bench_vector --benchmark_out=reports/benchmark_results.json --benchmark_out_format=json && \
     python3 reports/scripts/plot.py reports/benchmark_results.json && \
     python3 reports/generate_report.py reports/benchmark_results.json && \
     python3 reports/create_report_docx.py \
-"]
-
+    "]

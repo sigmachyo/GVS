@@ -1,4 +1,4 @@
-#pragma once
+
 
 #include <cuda_runtime.h>
 #include <stdexcept>
@@ -23,7 +23,7 @@ public:
         }
     }
 
-    // Конструктор копирования: выделяем новую память и копируем данные (D2D)
+    // Конструктор копирования: выделяем новую память и копируем данные
     Data(const Data& other) : size_(other.size_), data_(nullptr) {
         if (size_ > 0) {
             cudaMalloc(&data_, size_ * sizeof(AtomT));
@@ -70,6 +70,7 @@ public:
 
     AtomT* data() { return data_; }
     const AtomT* data() const { return data_; }
+    
     int size() const { return size_; }
 
     // Копирование данных с GPU на CPU
