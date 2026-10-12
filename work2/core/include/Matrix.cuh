@@ -29,7 +29,8 @@ public:
     const Data<AtomT>& data() const { return *data_; }
 
     MatrixView<AtomT>& view() { return view_; }
-    const MatrixView<AtomT>& view() const { return view_; }
+    MatrixView<const AtomT> view() const { return view_; }
+    MatrixView<const AtomT> cview() const { return view_; }
 
     // Умножение: this = lhs * rhs на GPU
     void matmul_from(const Matrix& lhs, const Matrix& rhs);
@@ -50,7 +51,7 @@ void Matrix<AtomT>::matmul_from(const Matrix& lhs, const Matrix& rhs) {
     dim3 grid((ncols() + block.x - 1) / block.x,
               (nrows() + block.y - 1) / block.y);
 
-    kernel_matmul_naive<<<grid, block>>>(lhs.view_, rhs.view_, view_);
+    kernel_matmul_naive<AtomT><<<grid, block>>>(lhs.view(), rhs.view(), view_);
     cudaDeviceSynchronize();
 }
 

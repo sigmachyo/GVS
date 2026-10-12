@@ -25,6 +25,7 @@ Makefile
 # Benchmark and generated analysis data
 work1/reports/temp/
 work2/reports/temp/
+work3/reports/temp/
 *.csv
 *.log
 

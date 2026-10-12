@@ -3,9 +3,9 @@
 #include "MatrixView.cuh"
 
 // CUDA-ядро наивного умножения матриц: C = A * B
-// Каждый поток вычисляет один элемент результирующей матрицы C
+// Входные матрицы a и b передаются как MatrixView<const AtomT>, так как они доступны только для чтения
 template <typename AtomT>
-__global__ void kernel_matmul_naive(MatrixView<AtomT> a, MatrixView<AtomT> b, MatrixView<AtomT> c) {
+__global__ void kernel_matmul_naive(const MatrixView<const AtomT> a, const MatrixView<const AtomT> b, MatrixView<AtomT> c) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 

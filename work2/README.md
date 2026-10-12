@@ -32,9 +32,10 @@ docker build -t gvs_work2 -f work2/Dockerfile work2/
 docker run --gpus all -it --name gvs_work2_env -v ${PWD}/work2:/app gvs_work2 bash
 ```
 
-**3. Вернуться к нему в следующий раз:**
+**3. Вернуться к нему в следующий раз из GVS:**
 ```powershell
-docker start -ai gvs_work2_env
+docker start -ai gvs
+cd /app/work2
 ```
 
 ---
@@ -43,10 +44,10 @@ docker start -ai gvs_work2_env
 
 ```bash
 # Настройка (один раз)
-cmake -B /tmp/build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake -B /tmp/build2 -S . -G Ninja -DCMAKE_BUILD_TYPE=Release
 
 # Компиляция (после каждого изменения кода)
-cmake --build /tmp/build
+cmake --build /tmp/build2
 ```
 
 ---
@@ -55,11 +56,11 @@ cmake --build /tmp/build
 
 ```bash
 # Только тесты
-/tmp/build/tests/test_matrix
+/tmp/build2/tests/test_matrix
 
 # Только бенчмарки
 mkdir -p reports/temp
-/tmp/build/benchmarks/bench_matrix --benchmark_out=reports/temp/benchmark_results.json --benchmark_out_format=json
+/tmp/build2/benchmarks/bench_matrix --benchmark_out=reports/temp/benchmark_results.json --benchmark_out_format=json
 
 # Графики (после бенчмарков)
 python3 reports/scripts/plot.py reports/temp/benchmark_results.json

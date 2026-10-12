@@ -133,7 +133,7 @@ public:
 
     <h3>kernel_matmul_naive.cuh</h3>
 <pre><code>template &lt;typename AtomT&gt;
-__global__ void kernel_matmul_naive(MatrixView&lt;AtomT&gt; a, MatrixView&lt;AtomT&gt; b, MatrixView&lt;AtomT&gt; c) {{
+__global__ void kernel_matmul_naive(const MatrixView&lt;const AtomT&gt; a, const MatrixView&lt;const AtomT&gt; b, MatrixView&lt;AtomT&gt; c) {{
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     if (row &lt; c.nrows() &amp;&amp; col &lt; c.ncols()) {{
