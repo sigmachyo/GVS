@@ -8,9 +8,9 @@
 
 using namespace std;
 
-using RowMajorMatrixXh = Eigen::Matrix<Eigen::half, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using RowMajorMatrixXf = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-// Бенчмарк умножения квадратных матриц на CPU (Eigen, half)
+// Бенчмарк умножения квадратных матриц на CPU (Eigen, float — Eigen 3.4 не поддерживает GEMM для half)
 static void BM_EigenMatrixMultiplication(benchmark::State& state) {
     int n = state.range(0);
 
@@ -19,13 +19,9 @@ static void BM_EigenMatrixMultiplication(benchmark::State& state) {
     uniform_real_distribution<float> dis(0.0f, 1.0f);
     for (float& v : host_f) v = dis(gen);
 
-    RowMajorMatrixXh eigen_a(n, n);
-    RowMajorMatrixXh eigen_b(n, n);
-    for (int i = 0; i < n * n; ++i) {
-        eigen_a.data()[i] = Eigen::half(host_f[i]);
-        eigen_b.data()[i] = Eigen::half(host_f[i]);
-    }
-    RowMajorMatrixXh eigen_result(n, n);
+    Eigen::Map<RowMajorMatrixXf> eigen_a(host_f.data(), n, n);
+    RowMajorMatrixXf eigen_b = eigen_a;
+    RowMajorMatrixXf eigen_result(n, n);
 
     for (auto _ : state) {
         eigen_result = eigen_a * eigen_b;

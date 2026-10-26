@@ -12,19 +12,26 @@ constexpr int WMMA_N = 16;
 constexpr int WMMA_K = 16;
 
 // CUDA-ядро умножения матриц с использованием тензорных ядер (WMMA API): C = A * B
+// Блок (128, 4) = 512 нитей = 16 варпов, расположенных в сетке 4×4 WMMA-тайлов (64×64 элементов)
 // Входные матрицы хранят __half (FP16), результат накапливается в float (FP32),
 // затем конвертируется обратно в __half при записи
 __global__ void kernel_matmul_wmma(const MatrixView<const __half> a,
                                    const MatrixView<const __half> b,
                                    MatrixView<__half> c) {
-    // Координаты WMMA-тайла результирующей матрицы C, за который отвечает данный варп
-    int warpM = (blockIdx.y * blockDim.y + threadIdx.y) / 32 * WMMA_M;
-    int warpN = (blockIdx.x * blockDim.x + threadIdx.x) / 32 * WMMA_N;
+    // Определяем позицию варпа внутри блока:
+    // threadIdx.x / 32 — столбец варпа (0..3), threadIdx.y — строка варпа (0..3)
+    int warpCol = threadIdx.x / 32;   // 0..3
+    int warpRow = threadIdx.y;         // 0..3
+
+    // Глобальные координаты WMMA-тайла результирующей матрицы C
+    int warpsPerBlockX = blockDim.x / 32;  // 4
+    int warpM = (blockIdx.y * blockDim.y + warpRow) * WMMA_M;
+    int warpN = (blockIdx.x * warpsPerBlockX + warpCol) * WMMA_N;
 
     // Проверка границ: варп может выйти за пределы матрицы C
     if (warpM >= c.nrows() || warpN >= c.ncols()) return;
 
-    // Объявляем фрагменты WMMA для аккумулятора (float), матриц A и B (__half)
+    // Объявляем фрагмент-аккумулятор (float) и обнуляем его
     wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, float> acc;
     wmma::fill_fragment(acc, 0.0f);
 
