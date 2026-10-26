@@ -26,6 +26,7 @@ Makefile
 work1/reports/temp/
 work2/reports/temp/
 work3/reports/temp/
+work4/reports/temp/
 *.csv
 *.log
 
